@@ -9,16 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCpuUsageRepository_QueryStatistics(t *testing.T) {
-	db, err := sql.Open("sqlite3", ":memory:")
-	assert.Nil(t, err)
-	defer db.Close()
-
-	_, err = db.Exec("CREATE TABLE cpu_usage (ts TIMESTAMPZ, host TEXT, usage DOUBLE PRECISION)")
-	assert.Nil(t, err)
-
+func populateSampleData(db *sql.DB) error {
 	stmt, err := db.Prepare("INSERT INTO cpu_usage (ts, host, usage) VALUES (?, ?, ?)")
-	assert.Nil(t, err)
+
+	if err != nil {
+		return err
+	}
+
 	defer stmt.Close()
 
 	data := [][]interface{}{
@@ -34,8 +31,24 @@ func TestCpuUsageRepository_QueryStatistics(t *testing.T) {
 
 	for _, d := range data {
 		_, err = stmt.Exec(d...)
-		assert.Nil(t, err)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
+}
+
+func TestCpuUsageRepository_QueryStatistics(t *testing.T) {
+	db, err := sql.Open("sqlite3", ":memory:")
+	assert.Nil(t, err)
+	defer db.Close()
+
+	_, err = db.Exec("CREATE TABLE cpu_usage (ts TIMESTAMPZ, host TEXT, usage DOUBLE PRECISION)")
+	assert.Nil(t, err)
+
+	err = populateSampleData(db)
+	assert.Nil(t, err)
 
 	expected := []dtos.CpuUsageStatistics{
 		{StartTime: "2024-05-01 08:00:00", EndTime: "2024-05-01 08:00:59", Max: 37.1, Min: 10.2},
