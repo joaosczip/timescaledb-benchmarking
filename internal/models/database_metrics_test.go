@@ -91,4 +91,12 @@ func TestDatabaseMetrics(t *testing.T) {
 
 		assert.Equal(t, 2, metrics.Failures)
 	})
+
+	t.Run("Should only set the avg query time when the total queries is greater than 0", func(t *testing.T) {
+		metrics := DatabaseMetrics{}
+
+		metrics.SetAverageQueryTime()
+
+		assert.Equal(t, time.Duration(0), metrics.AvgQueryTime)
+	})
 }

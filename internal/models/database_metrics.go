@@ -29,7 +29,9 @@ func (m *DatabaseMetrics) SetMaxQueryTime(newQueryTime time.Duration) {
 }
 
 func (m *DatabaseMetrics) SetAverageQueryTime() {
-	m.AvgQueryTime = m.TotalTime / time.Duration(m.TotalQueries)
+	if m.TotalQueries > 0 {
+		m.AvgQueryTime = m.TotalTime / time.Duration(m.TotalQueries)
+	}
 }
 
 func (m *DatabaseMetrics) SetMedianQueryTime() {
