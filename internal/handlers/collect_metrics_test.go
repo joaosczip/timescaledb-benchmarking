@@ -34,9 +34,9 @@ func TestCollectCpuUsageMetrics(t *testing.T) {
 		clock := new(ClockMock)
 
 		handler := NewCollectCpuUsageMetricsHandler(repository, clock)
-		_, err := handler.Handle([]dtos.CpuUsageQueryParams{})
+		metrics := handler.Handle([]dtos.CpuUsageQueryParams{})
 
-		assert.NoError(t, err)
+		assert.Nil(t, metrics)
 		repository.AssertNotCalled(t, "QueryStatistics")
 	})
 
@@ -55,9 +55,10 @@ func TestCollectCpuUsageMetrics(t *testing.T) {
 				EndTime:   "end",
 			},
 		}
-		_, err := handler.Handle(handlerInput)
+		metrics := handler.Handle(handlerInput)
 
-		assert.ErrorIs(t, err, assert.AnError)
+		assert.Nil(t, metrics)
+		assert.Equal(t, 1, metrics.Failures)
 		repository.AssertNumberOfCalls(t, "QueryStatistics", 1)
 		repository.AssertCalled(t, "QueryStatistics", "host", "start", "end")
 	})
@@ -101,9 +102,9 @@ func TestCollectCpuUsageMetrics(t *testing.T) {
 
 		handler := NewCollectCpuUsageMetricsHandler(repository, clock)
 
-		_, err := handler.Handle(handlerInput)
+		metrics := handler.Handle(handlerInput)
 
-		assert.NoError(t, err)
+		assert.NotNil(t, metrics)
 		repository.AssertExpectations(t)
 	})
 }
