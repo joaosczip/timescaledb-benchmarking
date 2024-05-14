@@ -50,11 +50,10 @@ func (h *CollectCpuUsageMetricsHandler) queryStatistics(queryDurationCh chan<- f
 
 	_, err := h.repository.QueryStatistics(queryParams.Host, queryParams.StartTime, queryParams.EndTime)
 
-	duration := time.Since(start)
-
-	queryDurationCh <- duration.Seconds()
-
 	if err != nil {
 		errCh <- err
+	} else {
+		duration := time.Since(start)
+		queryDurationCh <- duration.Seconds()
 	}
 }

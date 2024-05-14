@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"sync"
 	"testing"
-	"time"
 
 	"github.com/joaosczip/timescale/internal/dtos"
 	_ "github.com/mattn/go-sqlite3"
@@ -10,20 +10,13 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type ClockMock struct {
-	mock.Mock
-}
-
-func (m *ClockMock) Since(t time.Time) time.Duration {
-	args := m.Called(t)
-	return args.Get(0).(time.Duration)
-}
-
 type CpuUsageRepositoryMock struct {
 	mock.Mock
+	wg sync.WaitGroup
 }
 
 func (m *CpuUsageRepositoryMock) QueryStatistics(host string, startTime string, endTime string) ([]dtos.CpuUsageStatistics, error) {
+	defer m.wg.Done()
 	args := m.Called(host, startTime, endTime)
 	return args.Get(0).([]dtos.CpuUsageStatistics), args.Error(1)
 }
@@ -31,22 +24,21 @@ func (m *CpuUsageRepositoryMock) QueryStatistics(host string, startTime string, 
 func TestCollectCpuUsageMetrics(t *testing.T) {
 	t.Run("Should not call the repository when given an empty input", func(t *testing.T) {
 		repository := new(CpuUsageRepositoryMock)
-		clock := new(ClockMock)
 
-		handler := NewCollectCpuUsageMetricsHandler(repository, clock)
+		handler := NewCollectCpuUsageMetricsHandler(repository)
 		metrics := handler.Handle([]dtos.CpuUsageQueryParams{})
 
-		assert.Nil(t, metrics)
+		assert.NotNil(t, metrics)
 		repository.AssertNotCalled(t, "QueryStatistics")
 	})
 
-	t.Run("Should return an error when the repository returns an error", func(t *testing.T) {
+	t.Run("Should increment the failure metric when the repository returns an error", func(t *testing.T) {
 		repository := new(CpuUsageRepositoryMock)
 		repository.On("QueryStatistics", "host", "start", "end").Return([]dtos.CpuUsageStatistics{}, assert.AnError)
 
-		clock := new(ClockMock)
+		handler := NewCollectCpuUsageMetricsHandler(repository)
 
-		handler := NewCollectCpuUsageMetricsHandler(repository, clock)
+		repository.wg.Add(1)
 
 		handlerInput := []dtos.CpuUsageQueryParams{
 			{
@@ -57,10 +49,11 @@ func TestCollectCpuUsageMetrics(t *testing.T) {
 		}
 		metrics := handler.Handle(handlerInput)
 
-		assert.Nil(t, metrics)
+		repository.wg.Wait()
+
+		assert.NotNil(t, metrics)
 		assert.Equal(t, 1, metrics.Failures)
-		repository.AssertNumberOfCalls(t, "QueryStatistics", 1)
-		repository.AssertCalled(t, "QueryStatistics", "host", "start", "end")
+		repository.AssertExpectations(t)
 	})
 
 	t.Run("Should call the repository for each one of the provided query params", func(t *testing.T) {
@@ -98,11 +91,11 @@ func TestCollectCpuUsageMetrics(t *testing.T) {
 			On("QueryStatistics", handlerInput[3].Host, handlerInput[3].StartTime, handlerInput[3].EndTime).
 			Return([]dtos.CpuUsageStatistics{}, nil)
 
-		clock := new(ClockMock)
+		handler := NewCollectCpuUsageMetricsHandler(repository)
 
-		handler := NewCollectCpuUsageMetricsHandler(repository, clock)
-
+		repository.wg.Add(4)
 		metrics := handler.Handle(handlerInput)
+		repository.wg.Wait()
 
 		assert.NotNil(t, metrics)
 		repository.AssertExpectations(t)
