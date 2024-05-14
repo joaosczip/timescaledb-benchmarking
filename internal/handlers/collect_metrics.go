@@ -10,22 +10,17 @@ import (
 	"github.com/joaosczip/timescale/internal/models"
 )
 
-type Clock interface {
-	Since(time.Time) time.Duration
-}
-
 type CollectCpuUsageMetricsHandler struct {
 	repository repositories.CpuUsage
-	clock      Clock
 }
 
-func NewCollectCpuUsageMetricsHandler(repository repositories.CpuUsage, clock Clock) *CollectCpuUsageMetricsHandler {
-	return &CollectCpuUsageMetricsHandler{repository, clock}
+func NewCollectCpuUsageMetricsHandler(repository repositories.CpuUsage) *CollectCpuUsageMetricsHandler {
+	return &CollectCpuUsageMetricsHandler{repository}
 }
 
 func (h *CollectCpuUsageMetricsHandler) Handle(queryParams []dtos.CpuUsageQueryParams) *models.DatabaseMetrics {
 	workers := runtime.NumCPU()
-	queryDurationCh := make(chan time.Duration, workers)
+	queryDurationCh := make(chan float64, workers)
 	errCh := make(chan error, workers)
 
 	for _, queryParams := range queryParams {
@@ -34,13 +29,10 @@ func (h *CollectCpuUsageMetricsHandler) Handle(queryParams []dtos.CpuUsageQueryP
 
 	metrics := models.NewDatabaseMetrics()
 
-	for i := 0; i < workers; i++ {
+	for i := 0; i < len(queryParams); i++ {
 		select {
 		case queryDuration := <-queryDurationCh:
-			metrics.IncrementTotalQueries()
-			metrics.IncrementTotalTime(queryDuration)
-			metrics.SetMaxQueryTime(queryDuration)
-			metrics.SetMinQueryTime(queryDuration)
+			metrics.AddQueryTime(queryDuration)
 		case err := <-errCh:
 			fmt.Printf("Error querying statistics: %v\n", err)
 			metrics.IncrementFailures()
@@ -53,14 +45,16 @@ func (h *CollectCpuUsageMetricsHandler) Handle(queryParams []dtos.CpuUsageQueryP
 	return metrics
 }
 
-func (h *CollectCpuUsageMetricsHandler) queryStatistics(queryDurationCh chan<- time.Duration, errCh chan<- error, queryParams dtos.CpuUsageQueryParams) {
+func (h *CollectCpuUsageMetricsHandler) queryStatistics(queryDurationCh chan<- float64, errCh chan<- error, queryParams dtos.CpuUsageQueryParams) {
 	start := time.Now()
 
 	_, err := h.repository.QueryStatistics(queryParams.Host, queryParams.StartTime, queryParams.EndTime)
 
+	duration := time.Since(start)
+
+	queryDurationCh <- duration.Seconds()
+
 	if err != nil {
 		errCh <- err
-	} else {
-		queryDurationCh <- h.clock.Since(start)
 	}
 }
