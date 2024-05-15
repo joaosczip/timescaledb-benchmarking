@@ -49,6 +49,6 @@ func TestQueryParamsCsvReader(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, queryParams)
 
-		assert.Equal(t, expected, *queryParams)
+		assert.Equal(t, expected, queryParams)
 	})
 }

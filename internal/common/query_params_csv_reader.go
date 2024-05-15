@@ -10,13 +10,13 @@ import (
 
 var ErrInvalidHeader = errors.New("invalid csv header")
 
-type QueryParamsCsvReader struct{}
+type QueryParamsCsvReader[T dtos.CpuUsageQueryParams] struct{}
 
-func NewQueryParamsCsvReader() *QueryParamsCsvReader {
-	return &QueryParamsCsvReader{}
+func NewQueryParamsCsvReader() *QueryParamsCsvReader[dtos.CpuUsageQueryParams] {
+	return &QueryParamsCsvReader[dtos.CpuUsageQueryParams]{}
 }
 
-func (QueryParamsCsvReader) Read(path string) (*[]dtos.CpuUsageQueryParams, error) {
+func (QueryParamsCsvReader[T]) Read(path string) ([]dtos.CpuUsageQueryParams, error) {
 	file, err := os.Open(path)
 
 	if err != nil {
@@ -65,5 +65,5 @@ func (QueryParamsCsvReader) Read(path string) (*[]dtos.CpuUsageQueryParams, erro
 		})
 	}
 
-	return &queryParams, nil
+	return queryParams, nil
 }
