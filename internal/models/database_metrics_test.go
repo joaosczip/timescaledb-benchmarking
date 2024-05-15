@@ -16,11 +16,17 @@ func TestDatabaseMetrics(t *testing.T) {
 	})
 
 	t.Run("Should set the median query time", func(t *testing.T) {
-		metrics := DatabaseMetrics{TotalTime: 100, TotalQueries: 2}
+		metrics := DatabaseMetrics{TotalTime: 100, TotalQueries: 2, queries: []float64{50, 60}}
 
 		metrics.SetMedianQueryTime()
 
-		assert.Equal(t, 50.0, metrics.MedianQueryTime)
+		assert.Equal(t, 55.0, metrics.MedianQueryTime)
+
+		metrics.queries = append(metrics.queries, 70)
+
+		metrics.SetMedianQueryTime()
+
+		assert.Equal(t, 60.0, metrics.MedianQueryTime)
 	})
 
 	t.Run("Adding a new query time should update the metrics", func(t *testing.T) {

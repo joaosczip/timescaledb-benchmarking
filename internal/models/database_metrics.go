@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"sort"
 )
 
 type DatabaseMetrics struct {
@@ -12,6 +13,7 @@ type DatabaseMetrics struct {
 	MaxQueryTime    float64
 	AvgQueryTime    float64
 	MedianQueryTime float64
+	queries         []float64
 }
 
 func NewDatabaseMetrics() *DatabaseMetrics {
@@ -25,7 +27,18 @@ func (m *DatabaseMetrics) SetAverageQueryTime() {
 }
 
 func (m *DatabaseMetrics) SetMedianQueryTime() {
-	m.MedianQueryTime = m.TotalTime / 2
+	if len(m.queries) == 0 {
+		return
+	}
+	
+	sort.Float64s(m.queries)
+	midIndex := len(m.queries) / 2
+
+	if len(m.queries)%2 == 0 {
+		m.MedianQueryTime = (m.queries[midIndex-1] + m.queries[midIndex]) / 2
+	} else {
+		m.MedianQueryTime = m.queries[midIndex]
+	}
 }
 
 func (m *DatabaseMetrics) AddQueryTime(newQueryTime float64) {
@@ -38,6 +51,7 @@ func (m *DatabaseMetrics) AddQueryTime(newQueryTime float64) {
 	}
 
 	m.TotalTime += newQueryTime
+	m.queries = append(m.queries, newQueryTime)
 }
 
 func (m *DatabaseMetrics) IncrementFailures() {
