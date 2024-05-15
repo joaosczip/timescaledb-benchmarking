@@ -28,12 +28,12 @@ func (m *MockCsvReader) Read(path string) ([]dtos.CpuUsageQueryParams, error) {
 	return args.Get(0).([]dtos.CpuUsageQueryParams), args.Error(1)
 }
 
-type MockStdoutPrinter struct {
+type MockStdoutWriter struct {
 	data map[string]string
 	mock.Mock
 }
 
-func (m *MockStdoutPrinter) Print(data map[string]string) error {
+func (m *MockStdoutWriter) Write(data map[string]string) error {
 	m.data = data
 	args := m.Called()
 	return args.Error(0)
@@ -43,11 +43,11 @@ func TestDatabaseMetricsCommand_Run(t *testing.T) {
 	t.Run("Should return an error when there's an error reading the csv", func(t *testing.T) {
 		handler := new(MockCollectCpuUsageMetricsHandler)
 		csvReader := new(MockCsvReader)
-		stdoutPrinter := new(MockStdoutPrinter)
+		stdoutWriter := new(MockStdoutWriter)
 
 		csvReader.On("Read").Return([]dtos.CpuUsageQueryParams{}, common.ErrInvalidHeader)
 
-		command := NewDatabaseMetricsCommand(handler, csvReader, stdoutPrinter)
+		command := NewDatabaseMetricsCommand(handler, csvReader, stdoutWriter)
 
 		err := command.Run("incorrect.csv")
 
@@ -58,7 +58,7 @@ func TestDatabaseMetricsCommand_Run(t *testing.T) {
 	t.Run("Should use the csv data to call the handler", func(t *testing.T) {
 		handler := new(MockCollectCpuUsageMetricsHandler)
 		csvReader := new(MockCsvReader)
-		stdoutPrinter := new(MockStdoutPrinter)
+		stdoutWriter := new(MockStdoutWriter)
 
 		csvReader.On("Read").Return([]dtos.CpuUsageQueryParams{
 			{
@@ -68,9 +68,9 @@ func TestDatabaseMetricsCommand_Run(t *testing.T) {
 			},
 		}, nil)
 		handler.On("Handle").Return(&models.DatabaseMetrics{})
-		stdoutPrinter.On("Print", mock.Anything).Return(nil)
+		stdoutWriter.On("Write", mock.Anything).Return(nil)
 
-		command := NewDatabaseMetricsCommand(handler, csvReader, stdoutPrinter)
+		command := NewDatabaseMetricsCommand(handler, csvReader, stdoutWriter)
 
 		err := command.Run("correct.csv")
 
@@ -81,7 +81,7 @@ func TestDatabaseMetricsCommand_Run(t *testing.T) {
 	t.Run("Should use the data returned by the handler to print to stdout", func(t *testing.T) {
 		handler := new(MockCollectCpuUsageMetricsHandler)
 		csvReader := new(MockCsvReader)
-		stdoutPrinter := new(MockStdoutPrinter)
+		stdoutWriter := new(MockStdoutWriter)
 
 		csvReader.On("Read").Return([]dtos.CpuUsageQueryParams{
 			{
@@ -102,9 +102,9 @@ func TestDatabaseMetricsCommand_Run(t *testing.T) {
 		}
 
 		handler.On("Handle").Return(databaseMetrics)
-		stdoutPrinter.On("Print", mock.Anything).Return(nil)
+		stdoutWriter.On("Write", mock.Anything).Return(nil)
 
-		command := NewDatabaseMetricsCommand(handler, csvReader, stdoutPrinter)
+		command := NewDatabaseMetricsCommand(handler, csvReader, stdoutWriter)
 
 		err := command.Run("correct.csv")
 
@@ -120,13 +120,13 @@ func TestDatabaseMetricsCommand_Run(t *testing.T) {
 			"max_query_time":    "2.00ms",
 			"avg_query_time":    "1.50ms",
 			"median_query_time": "1.50ms",
-		}, stdoutPrinter.data)
+		}, stdoutWriter.data)
 	})
 
 	t.Run("Should return an error when there's an error printing to stdout", func(t *testing.T) {
 		handler := new(MockCollectCpuUsageMetricsHandler)
 		csvReader := new(MockCsvReader)
-		stdoutPrinter := new(MockStdoutPrinter)
+		stdoutWriter := new(MockStdoutWriter)
 
 		csvReader.On("Read").Return([]dtos.CpuUsageQueryParams{
 			{
@@ -137,9 +137,9 @@ func TestDatabaseMetricsCommand_Run(t *testing.T) {
 		}, nil)
 
 		handler.On("Handle").Return(&models.DatabaseMetrics{})
-		stdoutPrinter.On("Print", mock.Anything).Return(assert.AnError)
+		stdoutWriter.On("Write", mock.Anything).Return(assert.AnError)
 
-		command := NewDatabaseMetricsCommand(handler, csvReader, stdoutPrinter)
+		command := NewDatabaseMetricsCommand(handler, csvReader, stdoutWriter)
 
 		err := command.Run("correct.csv")
 

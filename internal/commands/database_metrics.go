@@ -8,20 +8,20 @@ import (
 )
 
 type DatabaseMetricsCommand struct {
-	handler       handlers.Handler[dtos.CpuUsageQueryParams, models.DatabaseMetrics]
-	csvReader     common.CsvReader[dtos.CpuUsageQueryParams]
-	stdoutPrinter common.StdoutPrinter
+	handler      handlers.Handler[dtos.CpuUsageQueryParams, models.DatabaseMetrics]
+	csvReader    common.CsvReader[dtos.CpuUsageQueryParams]
+	stdoutWriter common.StdoutWriter
 }
 
 func NewDatabaseMetricsCommand(
 	handler handlers.Handler[dtos.CpuUsageQueryParams, models.DatabaseMetrics],
 	csvReader common.CsvReader[dtos.CpuUsageQueryParams],
-	stdoutPrinter common.StdoutPrinter,
+	stdoutWriter common.StdoutWriter,
 ) *DatabaseMetricsCommand {
 	return &DatabaseMetricsCommand{
-		handler:       handler,
-		csvReader:     csvReader,
-		stdoutPrinter: stdoutPrinter,
+		handler:      handler,
+		csvReader:    csvReader,
+		stdoutWriter: stdoutWriter,
 	}
 }
 
@@ -34,7 +34,7 @@ func (c *DatabaseMetricsCommand) Run(queryParamsFilePath string) error {
 
 	metrics := c.handler.Handle(queryParams)
 
-	if err := c.stdoutPrinter.Print(metrics.ToMap()); err != nil {
+	if err := c.stdoutWriter.Write(metrics.ToMap()); err != nil {
 		return err
 	}
 

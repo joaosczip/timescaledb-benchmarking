@@ -6,17 +6,17 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-type TableWriterPrinter struct {
+type TableWriter struct {
 	table *tablewriter.Table
 }
 
-func NewTableWriterPrinter() *TableWriterPrinter {
-	return &TableWriterPrinter{
+func NewTableWriter() *TableWriter {
+	return &TableWriter{
 		table: tablewriter.NewWriter(os.Stdout),
 	}
 }
 
-func (t *TableWriterPrinter) Print(data map[string]string) error {
+func (t *TableWriter) Write(data map[string]string) error {
 	headers := []string{}
 	rows := []string{}
 
