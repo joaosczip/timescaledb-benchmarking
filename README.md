@@ -1,6 +1,6 @@
 # TimescaleDB Benchmarking
 
-This app is a command-line tool to measure the performance of queries performed by an TimescaleDB instance.
+This app is a command-line tool to measure the performance of queries performed by a TimescaleDB instance.
 
 ## Requirements
 - **go**: 1.20.2
@@ -23,7 +23,7 @@ Docker Compose version v2.21.0
 
 ## Running the tests
 
-In order to run the automated tests, run the command specified below:
+To run the automated tests, run the command specified below:
 
 ```sh
 $ go test ./...
@@ -32,7 +32,7 @@ $ go test ./...
 ## Set up the environment
 The `docker-compose.yml` file will build both the containers for the application and the database.
 
-The application is a simple `golang` command line app which receives a path to a file containing a bunch of `query parameters` that will be send to the database.
+The application is a simple `golang` command line app that receives a path to a file containing a bunch of `query parameters` that will be send to the database.
 
 The database is a `postgresql` instance with the `TimescaleDB` extension installed.
 
