@@ -10,3 +10,4 @@ COPY . .
 
 RUN go build -o main .
 
+ENTRYPOINT ["tail", "-f", "/dev/null"]
