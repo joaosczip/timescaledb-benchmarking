@@ -9,27 +9,27 @@ import (
 
 func TestQueryParamsCsvReader(t *testing.T) {
 	t.Run("Should return an error if the input file does not exist", func(t *testing.T) {
-		reader := NewQueryParamsCsvHeader()
+		reader := NewQueryParamsCsvReader()
 		_, err := reader.Read("non_existent_file.csv")
 		assert.NotNil(t, err)
 	})
 
 	t.Run("Should return an error if the file header has less than 3 columns", func(t *testing.T) {
-		reader := NewQueryParamsCsvHeader()
+		reader := NewQueryParamsCsvReader()
 		_, err := reader.Read("../../test/invalid_header_size.csv")
 		assert.NotNil(t, err)
 		assert.ErrorIs(t, err, ErrInvalidHeader)
 	})
 
 	t.Run("Should return an error if the file header has invalid columns", func(t *testing.T) {
-		reader := NewQueryParamsCsvHeader()
+		reader := NewQueryParamsCsvReader()
 		_, err := reader.Read("../../test/invalid_header_columns.csv")
 		assert.NotNil(t, err)
 		assert.ErrorIs(t, err, ErrInvalidHeader)
 	})
 
 	t.Run("Should return the query params when the csv is valid", func(t *testing.T) {
-		reader := NewQueryParamsCsvHeader()
+		reader := NewQueryParamsCsvReader()
 
 		expected := []dtos.CpuUsageQueryParams{
 			{

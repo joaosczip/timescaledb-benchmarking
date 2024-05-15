@@ -2,18 +2,21 @@ package common
 
 import (
 	"encoding/csv"
+	"errors"
 	"os"
 
 	"github.com/joaosczip/timescale/internal/dtos"
 )
 
-type QueryParamsCsvHeader[T dtos.CpuUsageQueryParams] struct{}
+var ErrInvalidHeader = errors.New("invalid csv header")
 
-func NewQueryParamsCsvHeader() *QueryParamsCsvHeader[dtos.CpuUsageQueryParams] {
-	return &QueryParamsCsvHeader[dtos.CpuUsageQueryParams]{}
+type QueryParamsCsvReader struct{}
+
+func NewQueryParamsCsvReader() *QueryParamsCsvReader {
+	return &QueryParamsCsvReader{}
 }
 
-func (QueryParamsCsvHeader[T]) Read(path string) (*[]dtos.CpuUsageQueryParams, error) {
+func (QueryParamsCsvReader) Read(path string) (*[]dtos.CpuUsageQueryParams, error) {
 	file, err := os.Open(path)
 
 	if err != nil {
