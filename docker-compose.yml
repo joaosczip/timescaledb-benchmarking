@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5433
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=postgres
+      - DB_SSLMODE=disable
+      - DB_MAX_OPEN_CONNS=0
+    depends_on:
+      - db
+
+  db:
+    container_name: db
+    image: postgres:16-alpine3.18
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./configs/cpu_usage.csv:/docker-entrypoint-initdb.d/cpu_usage.csv
+      - ./configs/cpu_usage.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./configs/seed.sh:/docker-entrypoint-initdb.d/seed.sh
