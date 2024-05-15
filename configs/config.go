@@ -1,34 +1,46 @@
 package configs
 
-import "github.com/spf13/viper"
+import (
+	"os"
+	"strconv"
+)
 
-type Config struct {
-	Database struct {
-		Host         string `mapstructure:"DB_HOST"`
-		Port         int    `mapstructure:"DB_PORT"`
-		User         string `mapstructure:"DB_USER"`
-		Password     string `mapstructure:"DB_PASSWORD"`
-		Name         string `mapstructure:"DB_NAME"`
-		SSLModel     string `mapstructure:"DB_SSLMODE"`
-		MaxOpenConns int    `mapstructure:"DB_MAX_OPEN_CONNS"`
-	}
+type Env struct {
+	DBHost         string
+	DBPort         int
+	DBUser         string
+	DBPassword     string
+	DBName         string
+	DBSSLModel     string
+	DBMaxOpenConns int
 }
 
-func Load(path string) (*Config, error) {
-	var config Config
+var Config *Env
 
-	viper.SetConfigName("config")
-	viper.SetConfigType("env")
-	viper.AddConfigPath(path)
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, err
+func LoadEnv() *Env {
+	if Config != nil {
+		return Config
 	}
 
-	if err := viper.Unmarshal(&config); err != nil {
-		return nil, err
+	config := &Env{}
+
+	config.DBHost = getEnv("DB_HOST")
+	config.DBPort, _ = strconv.Atoi(getEnv("DB_PORT"))
+	config.DBUser = getEnv("DB_USER")
+	config.DBPassword = getEnv("DB_PASSWORD")
+	config.DBName = getEnv("DB_NAME")
+	config.DBSSLModel = getEnv("DB_SSLMODE")
+	config.DBMaxOpenConns, _ = strconv.Atoi(getEnv("DB_MAX_OPEN_CONNS"))
+
+	return config
+}
+
+func getEnv(key string) string {
+	value, exists := os.LookupEnv(key)
+
+	if !exists {
+		panic("Environment variable " + key + " is not set")
 	}
 
-	return &config, nil
+	return value
 }

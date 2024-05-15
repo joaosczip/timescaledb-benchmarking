@@ -24,17 +24,13 @@ var queryMetricsCmd = &cobra.Command{
 The queries will be used to generate some metrics that will evaluate the performance from both the database and the application.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := configs.Load(".")
-
-		if err != nil {
-			panic(err)
-		}
+		config := configs.LoadEnv()
 
 		db, err := sql.Open(
 			"postgres",
 			fmt.Sprintf(
 				"user=%s dbname=%s password=%s host=%s port=%d sslmode=%s",
-				config.Database.User, config.Database.Name, config.Database.Password, config.Database.Host, config.Database.Port, config.Database.SSLModel,
+				config.DBUser, config.DBName, config.DBPassword, config.DBHost, config.DBPort, config.DBSSLModel,
 			),
 		)
 
@@ -44,7 +40,7 @@ The queries will be used to generate some metrics that will evaluate the perform
 
 		defer db.Close()
 
-		db.SetMaxOpenConns(config.Database.MaxOpenConns)
+		db.SetMaxOpenConns(config.DBMaxOpenConns)
 
 		err = cmd.ParseFlags(args)
 
