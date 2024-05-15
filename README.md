@@ -3,18 +3,30 @@
 This app is a command-line tool to measure the performance of queries performed by an TimescaleDB instance.
 
 ## Requirements
+- **go**: 1.20.2
 - **Docker**: 20.10.17
 - **Docker compose**: 2.21.0
 
 You can check if your environment meets the requirements above by running:
 
 ```sh
+$ go version
+go version go1.20.2
+
 $ docker -v
 Docker version 20.10.17, build 100c701
 
 # it must be docker compose, and not docker-compose (the old one)
 $ docker compose version
 Docker Compose version v2.21.0
+```
+
+## Running the tests
+
+In order to run the automated tests, run the command specified below:
+
+```sh
+$ go test ./...
 ```
 
 ## Set up the environment
