@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"runtime"
 	"time"
 
@@ -34,7 +33,7 @@ func (h *CollectCpuUsageMetricsHandler) Handle(queryParams []dtos.CpuUsageQueryP
 		case queryDuration := <-queryDurationCh:
 			metrics.AddQueryTime(queryDuration)
 		case err := <-errCh:
-			fmt.Printf("Error querying statistics: %v\n", err)
+			_ = err
 			metrics.IncrementFailures()
 		}
 	}
