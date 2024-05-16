@@ -2,6 +2,27 @@
 
 This app is a command-line tool to measure the performance of queries performed by a TimescaleDB instance.
 
+## High-level overview and architecture
+
+### Overview
+
+The application uses the [cobra-cli](https://github.com/spf13/cobra) package to receive the input file through the command line.
+
+Once the file is read, a buffered channel will be created based on the number of available CPU cores in the runner machine. And it'll launch a `worker pool` of goroutines to execute concurrently.
+
+Each goroutine will do two things:
+- Issue the query with the parameters from the input file against the database. One query for each line of the input file.
+- Measure the query's execution time.
+
+The data collected by each one of the goroutines will be gathered into the buffered channel.
+
+After the process is finished, all the gathered information will be displayed to the user through the terminal.
+
+### Architecture
+
+![Untitled Diagram drawio (8)](https://github.com/joaosczip/timescaledb-benchmarking/assets/38441035/740f845f-405f-4d77-b087-8e2adf66c504)
+
+
 ## Requirements
 - **go**: 1.20.2
 - **Docker**: 20.10.17
